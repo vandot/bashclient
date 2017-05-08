@@ -131,11 +131,14 @@ get_http() {
       # If return code is 0 and response is empty, most probably netcat exited before response
       if [[ ${response} == '' ]]; then
         # Increase WAIT and repeat request, linux doesn't support bc out of box
-        WAIT=1
-        if [[ "${WAIT}" -ge 1 ]]; then  
-          WAIT=$((WAIT*2))
-        fi
-        if [[ ${WAIT} -gt 5 ]]; then
+        # For systems that support bc, uncomment following lines and commet those with # on the right
+        # WAIT=$(echo $WAIT*2 | bc)
+        # if [[ ${WAIT%.*} -gt 5 ]]; then
+        WAIT=1 # 
+        if [[ "${WAIT}" -gt 1 ]]; then #
+          WAIT=$((WAIT*2)) #
+        fi #
+        if [[ ${WAIT} -gt 5 ]]; then #
           echo "408 Request Timeout"
           exit 0
         fi
