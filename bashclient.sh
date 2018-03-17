@@ -26,7 +26,6 @@ declare -x PORT="80"
 declare -x SERVER=""
 declare -x SCHEME="http"
 declare -x URLPATH="/"
-declare -x WAIT=0.3
 declare -x WRITE=false
 
 declare -a HTTP_RESPONSE=(
@@ -58,10 +57,11 @@ parse_url() {
   fi
 }
 
-# Request are being made with netcat, sleep $WAIT is needed because netcat exits without wating for response, default 0.3
-# Netcat writes all connection headers to STDERR and they are redirected with 2>&1
+# Request are being made with /dev/tcp
 req() {
-  (echo -e "GET $URLPATH HTTP/1.1\r\nHost: $SERVER\r\nUser-Agent:netcat\r\nAccept: $ACCEPT\r\n\r\n"; sleep $WAIT) | nc "$SERVER" "$PORT" 2>&1
+  exec 3<>/dev/tcp/"${SERVER}"/"${PORT}"
+  echo -e "GET $URLPATH HTTP/1.1\\r\\nHost: $SERVER\\r\\nUser-Agent:bashclient0.1\\r\\nAccept: $ACCEPT\\r\\nConnection: close\\r\\n\\r\\n" >&3
+  cat <&3
 }
 
 # Parse HTTP response
@@ -128,23 +128,7 @@ get_http() {
       read -r SERVER URLPATH < <(echo "${response}")
       continue
     elif [[ "${code}" -eq 0 ]]; then
-      # If return code is 0 and response is empty, most probably netcat exited before response
-      if [[ ${response} == '' ]]; then
-        # Increase WAIT and repeat request, linux doesn't support bc out of box
-        # For systems that support bc, uncomment following lines and commet those with # on the right
-        # WAIT=$(echo $WAIT*2 | bc)
-        # if [[ ${WAIT%.*} -gt 5 ]]; then
-        WAIT=1 # 
-        if [[ "${WAIT}" -gt 1 ]]; then #
-          WAIT=$((WAIT*2)) #
-        fi #
-        if [[ ${WAIT} -gt 5 ]]; then #
-          echo "408 Request Timeout"
-          exit 0
-        fi
-        continue
-      fi
-      # If all good print response and break loop
+      # If return code is 0 print response and break loop
       echo "${response}"
       break
     fi
