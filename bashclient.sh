@@ -22,21 +22,12 @@ expr "$*" : ".*--help" > /dev/null && usage
 
 declare -x ACCEPT="application/json"
 declare -x CODE=""
+declare -x MESSAGE=""
 declare -x PORT="80"
 declare -x SERVER=""
 declare -x SCHEME="http"
 declare -x URLPATH="/"
 declare -x WRITE=false
-
-declare -a HTTP_RESPONSE=(
-   [400]="Bad Request"
-   [401]="Unauthorized"
-   [403]="Forbidden"
-   [404]="Not Found"
-   [500]="Internal Server Error"
-   [502]="Bad Gateway"
-   [503]="Service Unavailable"
-)
 
 # Parse URL into SCHEME, SERVER, PORT AND URLPATH
 parse_url() {
@@ -71,6 +62,7 @@ parse_res() {
     # Set HTTP code
     if [[ "${line}" == HTTP* ]]; then
       CODE=$(echo "${line}" | cut -f2 -d' ')
+      MESSAGE=$(echo "${line}" | cut -f3- -d' ')
       continue
     fi
     # If codes are 301 or 302 we need to get new Location and execute request to that new location
@@ -102,8 +94,8 @@ parse_res() {
       echo "${line}"
       continue
     fi
-    if [[ "${CODE}" =~ 400|401|403|404|500|502|503 ]]; then
-      echo "${CODE} ${HTTP_RESPONSE[$CODE]}"
+    if ! [[ "${CODE}" =~ '200'|'301'|'302' ]]; then
+      echo "${CODE} ${MESSAGE}"
       exit 0
     fi
   done <<< "${1}"

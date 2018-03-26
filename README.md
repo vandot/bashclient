@@ -2,12 +2,11 @@
 
 CLI HTTP "client" and a bash HTTP "library" for sending HTTP requests.
 
-This is a basic HTTP client and not all functionalities and HTTP codes are supported. Codes 200, 301 and 302 redirection and basic 4XX and 5XX error codes. _SSL is not supported._ Only text file download is supported.
+This is a basic HTTP client. Codes 200, 301 and 302 redirection and all 4XX and 5XX error codes are supported. _SSL is not supported._ Only text file download is supported.
 
 ## Requirements
 
   1. `bash`, 3 or later
-  2. `netcat` to handle socket connections
 
 ## Installation
 
